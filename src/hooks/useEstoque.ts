@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EstoqueItem {
@@ -15,6 +15,17 @@ export const useEstoque = (search: string = "") => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Debounce search term to avoid excessive API calls
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -25,8 +36,8 @@ export const useEstoque = (search: string = "") => {
         .select('*')
         .order('nome', { ascending: true });
 
-      if (search.trim()) {
-        query = query.ilike('nome', `%${search.trim()}%`);
+      if (debouncedSearch.trim()) {
+        query = query.ilike('nome', `%${debouncedSearch.trim()}%`);
       }
 
       const { data: items, error } = await query;
@@ -46,7 +57,7 @@ export const useEstoque = (search: string = "") => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, [debouncedSearch]);
 
   const refresh = () => {
     fetchData();

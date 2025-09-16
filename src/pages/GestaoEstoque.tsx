@@ -3,19 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Download } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Download, Filter } from "lucide-react";
 import { DataTableEstoque } from "@/components/estoque/DataTableEstoque";
 import { ModalNovoItem } from "@/components/estoque/ModalNovoItem";
 import { useEstoque } from "@/hooks/useEstoque";
 
 export default function GestaoEstoque() {
   const [search, setSearch] = useState("");
+  const [disponibilidadeFilter, setDisponibilidadeFilter] = useState<string>("todos");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: estoque, loading, refresh } = useEstoque(search);
   const { toast } = useToast();
 
+  // Filter data based on disponibilidade
+  const filteredEstoque = estoque?.filter(item => {
+    if (disponibilidadeFilter === "disponivel") return item.disponivel;
+    if (disponibilidadeFilter === "indisponivel") return !item.disponivel;
+    return true; // "todos"
+  }) || [];
+
   const handleExportCSV = () => {
-    if (!estoque?.length) {
+    if (!filteredEstoque.length) {
       toast({
         title: "Nenhum dado para exportar",
         description: "A tabela está vazia ou sem resultados.",
@@ -27,7 +36,7 @@ export default function GestaoEstoque() {
     const headers = ["Nome", "Quantidade", "Disponível", "Preço"];
     const csvContent = [
       headers.join(","),
-      ...estoque.map(item => [
+      ...filteredEstoque.map(item => [
         `"${item.nome}"`,
         item.quantidade,
         item.disponivel ? "Sim" : "Não",
@@ -47,7 +56,7 @@ export default function GestaoEstoque() {
 
     toast({
       title: "CSV exportado com sucesso!",
-      description: `${estoque.length} itens exportados.`
+      description: `${filteredEstoque.length} itens exportados.`
     });
   };
 
@@ -66,18 +75,31 @@ export default function GestaoEstoque() {
         <h1 className="text-3xl font-bold text-foreground">Gestão de Estoque</h1>
         
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <Input
-            placeholder="Buscar por nome..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Buscar por nome..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            
+            <Select value={disponibilidadeFilter} onValueChange={setDisponibilidadeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrar por disponibilidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="disponivel">Disponíveis</SelectItem>
+                <SelectItem value="indisponivel">Indisponíveis</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           <div className="flex gap-2">
             <Button
               onClick={handleExportCSV}
               variant="outline"
-              disabled={!estoque?.length || loading}
+              disabled={!filteredEstoque.length || loading}
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
@@ -96,7 +118,7 @@ export default function GestaoEstoque() {
       </div>
 
       <DataTableEstoque
-        data={estoque || []}
+        data={filteredEstoque}
         loading={loading}
         onUpdate={refresh}
       />

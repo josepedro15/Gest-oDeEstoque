@@ -129,7 +129,7 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -159,7 +159,8 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
                       if (!isEditing) initializeEdit(item);
                       handleFieldChange(item.id, 'quantidade', parseInt(e.target.value) || 0);
                     }}
-                    className="w-20"
+                    className={`w-20 ${isEditing ? 'border-blue-500 bg-blue-50' : ''}`}
+                    placeholder="0"
                   />
                 </TableCell>
                 
@@ -188,7 +189,8 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
                       if (!isEditing) initializeEdit(item);
                       handleFieldChange(item.id, 'preco', parseFloat(e.target.value) || 0);
                     }}
-                    className="w-28"
+                    className={`w-28 ${isEditing ? 'border-blue-500 bg-blue-50' : ''}`}
+                    placeholder="0.00"
                   />
                 </TableCell>
                 

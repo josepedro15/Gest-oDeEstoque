@@ -1,8 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "gestao-estoque",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Sistema de Gestão de Estoque para Materiais de Construção",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

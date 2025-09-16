@@ -44,6 +44,8 @@ export const ModalNovoItem = ({ isOpen, onClose, onSuccess }: ModalNovoItemProps
 
     if (!formData.nome.trim()) {
       newErrors.nome = "Nome é obrigatório";
+    } else if (formData.nome.trim().length < 2) {
+      newErrors.nome = "Nome deve ter pelo menos 2 caracteres";
     }
 
     if (formData.quantidade < 0) {
@@ -52,6 +54,8 @@ export const ModalNovoItem = ({ isOpen, onClose, onSuccess }: ModalNovoItemProps
 
     if (formData.preco < 0) {
       newErrors.preco = "Preço deve ser maior ou igual a zero";
+    } else if (formData.preco > 999999.99) {
+      newErrors.preco = "Preço não pode ser maior que R$ 999.999,99";
     }
 
     setErrors(newErrors);
