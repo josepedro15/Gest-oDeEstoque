@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWebhook } from "./useWebhook";
 
 export interface EstoqueItem {
   id: string;
@@ -16,6 +17,7 @@ export const useEstoque = (search: string = "") => {
   const [data, setData] = useState<EstoqueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { sendProductCreated, sendProductUpdated, sendProductDeleted } = useWebhook();
 
   // Debounce search term to avoid excessive API calls
   const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -67,6 +69,12 @@ export const useEstoque = (search: string = "") => {
 
   const updateItem = async (id: string, updates: Partial<EstoqueItem>) => {
     try {
+      // Buscar o item atual para comparar mudanças
+      const currentItem = data.find(item => item.id === id);
+      if (!currentItem) {
+        throw new Error('Item não encontrado');
+      }
+
       const { error } = await supabase
         .from('estoque')
         .update({
@@ -80,6 +88,40 @@ export const useEstoque = (search: string = "") => {
       }
 
       await fetchData(); // Refresh data after update
+
+      // Buscar o item atualizado para enviar no webhook
+      const updatedItem = data.find(item => item.id === id);
+      if (updatedItem) {
+        // Detectar mudanças
+        const changes = [];
+        if (updates.quantidade !== undefined && updates.quantidade !== currentItem.quantidade) {
+          changes.push({
+            field: 'quantidade',
+            old_value: currentItem.quantidade,
+            new_value: updates.quantidade
+          });
+        }
+        if (updates.disponivel !== undefined && updates.disponivel !== currentItem.disponivel) {
+          changes.push({
+            field: 'disponivel',
+            old_value: currentItem.disponivel,
+            new_value: updates.disponivel
+          });
+        }
+        if (updates.preco !== undefined && updates.preco !== currentItem.preco) {
+          changes.push({
+            field: 'preco',
+            old_value: currentItem.preco,
+            new_value: updates.preco
+          });
+        }
+
+        // Enviar webhook apenas se houver mudanças
+        if (changes.length > 0) {
+          await sendProductUpdated(updatedItem, changes);
+        }
+      }
+
       return { success: true };
     } catch (err) {
       console.error('Erro ao atualizar item:', err);
@@ -92,15 +134,23 @@ export const useEstoque = (search: string = "") => {
 
   const createItem = async (item: Omit<EstoqueItem, 'id' | 'updated_at'>) => {
     try {
-      const { error } = await supabase
+      const { data: newItem, error } = await supabase
         .from('estoque')
-        .insert([item]);
+        .insert([item])
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
       await fetchData(); // Refresh data after creation
+
+      // Enviar webhook para item criado
+      if (newItem) {
+        await sendProductCreated(newItem);
+      }
+
       return { success: true };
     } catch (err) {
       console.error('Erro ao criar item:', err);
@@ -113,6 +163,9 @@ export const useEstoque = (search: string = "") => {
 
   const deleteItem = async (id: string) => {
     try {
+      // Buscar o item antes de deletar para enviar no webhook
+      const itemToDelete = data.find(item => item.id === id);
+      
       const { error } = await supabase
         .from('estoque')
         .delete()
@@ -123,6 +176,12 @@ export const useEstoque = (search: string = "") => {
       }
 
       await fetchData(); // Refresh data after deletion
+
+      // Enviar webhook para item deletado
+      if (itemToDelete) {
+        await sendProductDeleted(itemToDelete);
+      }
+
       return { success: true };
     } catch (err) {
       console.error('Erro ao deletar item:', err);
