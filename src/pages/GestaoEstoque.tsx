@@ -1,0 +1,111 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Download } from "lucide-react";
+import { DataTableEstoque } from "@/components/estoque/DataTableEstoque";
+import { ModalNovoItem } from "@/components/estoque/ModalNovoItem";
+import { useEstoque } from "@/hooks/useEstoque";
+
+export default function GestaoEstoque() {
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: estoque, loading, refresh } = useEstoque(search);
+  const { toast } = useToast();
+
+  const handleExportCSV = () => {
+    if (!estoque?.length) {
+      toast({
+        title: "Nenhum dado para exportar",
+        description: "A tabela está vazia ou sem resultados.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const headers = ["Nome", "Quantidade", "Disponível", "Preço"];
+    const csvContent = [
+      headers.join(","),
+      ...estoque.map(item => [
+        `"${item.nome}"`,
+        item.quantidade,
+        item.disponivel ? "Sim" : "Não",
+        `"R$ ${item.preco.toFixed(2).replace(".", ",")}"`,
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `estoque_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "CSV exportado com sucesso!",
+      description: `${estoque.length} itens exportados.`
+    });
+  };
+
+  const handleItemCreated = () => {
+    setIsModalOpen(false);
+    refresh();
+    toast({
+      title: "Item criado",
+      description: "Item adicionado ao estoque com sucesso."
+    });
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col space-y-4">
+        <h1 className="text-3xl font-bold text-foreground">Gestão de Estoque</h1>
+        
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <Input
+            placeholder="Buscar por nome..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-sm"
+          />
+          
+          <div className="flex gap-2">
+            <Button
+              onClick={handleExportCSV}
+              variant="outline"
+              disabled={!estoque?.length || loading}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
+            </Button>
+            
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Item
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <DataTableEstoque
+        data={estoque || []}
+        loading={loading}
+        onUpdate={refresh}
+      />
+
+      <ModalNovoItem
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleItemCreated}
+      />
+    </div>
+  );
+}
