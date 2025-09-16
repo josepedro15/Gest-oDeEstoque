@@ -46,7 +46,7 @@ SELECT
     quantidade,
     preco,
     disponivel,
-    created_at
+    updated_at
 FROM public.estoque 
 WHERE user_id = '33ed3ee2-95bf-4746-8862-2d5dfa029409'
 ORDER BY nome, marca;
