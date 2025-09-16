@@ -111,12 +111,35 @@ export const useEstoque = (search: string = "") => {
     }
   };
 
+  const deleteItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('estoque')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      await fetchData(); // Refresh data after deletion
+      return { success: true };
+    } catch (err) {
+      console.error('Erro ao deletar item:', err);
+      return { 
+        success: false, 
+        error: err instanceof Error ? err.message : 'Erro desconhecido' 
+      };
+    }
+  };
+
   return {
     data,
     loading,
     error,
     refresh,
     updateItem,
-    createItem
+    createItem,
+    deleteItem
   };
 };

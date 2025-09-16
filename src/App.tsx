@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import GestaoEstoque from "./pages/GestaoEstoque";
 import ProdutosPopulares from "./pages/ProdutosPopulares";
+import CRMWhatsapp from "./pages/CRMWhatsapp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/gestao-estoque" element={<GestaoEstoque />} />
             <Route path="/produtos-populares" element={<ProdutosPopulares />} />
+            <Route path="/crm-whatsapp" element={<CRMWhatsapp />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp } from "lucide-react";
+import { Package, TrendingUp, MessageSquare } from "lucide-react";
 
 const Index = () => {
   return (
@@ -27,6 +27,13 @@ const Index = () => {
             <Link to="/produtos-populares">
               <TrendingUp className="h-4 w-4 mr-2" />
               Produtos Mais Procurados
+            </Link>
+          </Button>
+          <div className="block sm:hidden" />
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+            <Link to="/crm-whatsapp">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              CRM WhatsApp
             </Link>
           </Button>
         </div>

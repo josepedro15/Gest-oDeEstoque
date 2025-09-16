@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { EstoqueItem, useEstoque } from "@/hooks/useEstoque";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Trash2 } from "lucide-react";
 
 interface DataTableEstoqueProps {
   data: EstoqueItem[];
@@ -24,7 +25,8 @@ interface EditingRow {
 export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoqueProps) => {
   const [editingRows, setEditingRows] = useState<Record<string, EditingRow>>({});
   const [savingRows, setSavingRows] = useState<Set<string>>(new Set());
-  const { updateItem } = useEstoque();
+  const [deletingRows, setDeletingRows] = useState<Set<string>>(new Set());
+  const { updateItem, deleteItem } = useEstoque();
   const { toast } = useToast();
 
   const handleFieldChange = (id: string, field: keyof EditingRow, value: number | boolean) => {
@@ -104,6 +106,34 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
     }
   };
 
+  const handleDelete = async (item: EstoqueItem) => {
+    setDeletingRows(prev => new Set(prev).add(item.id));
+
+    try {
+      const result = await deleteItem(item.id);
+
+      if (result.success) {
+        toast({
+          title: "Item excluído",
+          description: `${item.nome} foi removido do estoque.`
+        });
+        onUpdate();
+      } else {
+        toast({
+          title: "Erro ao excluir",
+          description: result.error || "Erro desconhecido",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setDeletingRows(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id);
+        return newSet;
+      });
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -138,7 +168,7 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
             <TableHead className="w-[120px]">Quantidade</TableHead>
             <TableHead className="w-[120px]">Disponível</TableHead>
             <TableHead className="w-[150px]">Preço (R$)</TableHead>
-            <TableHead className="w-[100px]">Ações</TableHead>
+            <TableHead className="w-[150px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -146,6 +176,7 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
             const editData = editingRows[item.id];
             const isEditing = !!editData;
             const isSaving = savingRows.has(item.id);
+            const isDeleting = deletingRows.has(item.id);
 
             return (
               <TableRow key={item.id}>
@@ -197,19 +228,59 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
                 </TableCell>
                 
                 <TableCell>
-                  <Button
-                    size="sm"
-                    onClick={() => handleSave(item)}
-                    disabled={isSaving}
-                    className="flex items-center gap-1"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Save className="h-3 w-3" />
-                    )}
-                    Salvar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleSave(item)}
+                      disabled={isSaving || isDeleting}
+                      className="flex items-center gap-1"
+                    >
+                      {isSaving ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Save className="h-3 w-3" />
+                      )}
+                      Salvar
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={isSaving || isDeleting}
+                          className="flex items-center gap-1"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                          Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir <strong>{item.nome}</strong>?
+                            {item.marca && <><br />Marca: <strong>{item.marca}</strong></>}
+                            <br />
+                            Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(item)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             );

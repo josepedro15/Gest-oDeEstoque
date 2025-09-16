@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Download, Filter, TrendingUp, Home } from "lucide-react";
+import { Plus, Download, Filter, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DataTableEstoque } from "@/components/estoque/DataTableEstoque";
 import { ModalNovoItem } from "@/components/estoque/ModalNovoItem";
@@ -86,6 +86,12 @@ export default function GestaoEstoque() {
               <Link to="/produtos-populares" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Produtos Populares
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/crm-whatsapp" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                CRM WhatsApp
               </Link>
             </Button>
           </div>
