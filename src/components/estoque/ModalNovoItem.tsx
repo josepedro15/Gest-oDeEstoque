@@ -16,6 +16,7 @@ interface ModalNovoItemProps {
 
 interface FormData {
   nome: string;
+  marca: string;
   quantidade: number;
   disponivel: boolean;
   preco: number;
@@ -30,6 +31,7 @@ interface FormErrors {
 export const ModalNovoItem = ({ isOpen, onClose, onSuccess }: ModalNovoItemProps) => {
   const [formData, setFormData] = useState<FormData>({
     nome: "",
+    marca: "",
     quantidade: 0,
     disponivel: true,
     preco: 0
@@ -92,6 +94,7 @@ export const ModalNovoItem = ({ isOpen, onClose, onSuccess }: ModalNovoItemProps
   const resetForm = () => {
     setFormData({
       nome: "",
+      marca: "",
       quantidade: 0,
       disponivel: true,
       preco: 0
@@ -124,6 +127,16 @@ export const ModalNovoItem = ({ isOpen, onClose, onSuccess }: ModalNovoItemProps
             {errors.nome && (
               <p className="text-sm text-destructive">{errors.nome}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="marca">Marca</Label>
+            <Input
+              id="marca"
+              value={formData.marca}
+              onChange={(e) => setFormData(prev => ({ ...prev, marca: e.target.value }))}
+              placeholder="Marca do produto"
+            />
           </div>
 
           <div className="space-y-2">

@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ProdutoPopular {
   id: string;
   nome: string;
+  marca?: string;
   quantidade: number;
   disponivel: boolean;
   preco: number;
+  user_id?: string;
   vezes_procurado: number;
   ultima_busca: string;
 }

@@ -141,6 +141,7 @@ export default function ProdutosPopulares() {
                       {produto.nome}
                     </CardTitle>
                     <CardDescription className="mt-1">
+                      {produto.marca && <span className="text-sm text-muted-foreground">{produto.marca} • </span>}
                       {formatCurrency(produto.preco)}
                     </CardDescription>
                   </div>

@@ -133,7 +133,8 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[300px]">Nome</TableHead>
+            <TableHead className="w-[250px]">Nome</TableHead>
+            <TableHead className="w-[150px]">Marca</TableHead>
             <TableHead className="w-[120px]">Quantidade</TableHead>
             <TableHead className="w-[120px]">Disponível</TableHead>
             <TableHead className="w-[150px]">Preço (R$)</TableHead>
@@ -149,6 +150,7 @@ export const DataTableEstoque = ({ data, loading, onUpdate }: DataTableEstoquePr
             return (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.nome}</TableCell>
+                <TableCell className="text-muted-foreground">{item.marca || '-'}</TableCell>
                 
                 <TableCell>
                   <Input
