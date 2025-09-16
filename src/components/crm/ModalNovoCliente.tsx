@@ -47,8 +47,17 @@ export const ModalNovoCliente = ({ isOpen, onClose, onSuccess }: ModalNovoClient
 
     if (!formData.telefone.trim()) {
       newErrors.telefone = "Telefone é obrigatório";
-    } else if (!/^(\+?55)?\s?\(?[1-9]{2}\)?\s?[0-9]{4,5}-?[0-9]{4}$/.test(formData.telefone.replace(/\D/g, ''))) {
-      newErrors.telefone = "Formato de telefone inválido";
+    } else {
+      // Aceitar formatos de telefone brasileiro ou IDs do WhatsApp
+      const phoneRegex = /^(\+?55)?\s?\(?[1-9]{2}\)?\s?[0-9]{4,5}-?[0-9]{4}$/;
+      const whatsappRegex = /^[0-9]{10,13}@s\.whatsapp\.net$/;
+      const numberOnlyRegex = /^[0-9]{10,13}$/;
+      
+      if (!phoneRegex.test(formData.telefone.replace(/\D/g, '')) && 
+          !whatsappRegex.test(formData.telefone) && 
+          !numberOnlyRegex.test(formData.telefone.replace(/\D/g, ''))) {
+        newErrors.telefone = "Formato de telefone inválido (aceita: (11) 99999-9999, +5511999999999, 553194959512@s.whatsapp.net)";
+      }
     }
 
     if (formData.nome.trim() && formData.nome.trim().length < 2) {
@@ -157,7 +166,7 @@ export const ModalNovoCliente = ({ isOpen, onClose, onSuccess }: ModalNovoClient
                 id="telefone"
                 value={formData.telefone}
                 onChange={handlePhoneChange}
-                placeholder="(11) 99999-9999"
+                placeholder="(11) 99999-9999 ou 553194959512@s.whatsapp.net"
                 className={errors.telefone ? "border-destructive" : ""}
               />
               {errors.telefone && (

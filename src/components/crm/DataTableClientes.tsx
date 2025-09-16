@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesWhatsapp, ClienteWhatsapp } from "@/hooks/useClientesWhatsapp";
-import { Loader2, Trash2, MessageSquare, Phone, Calendar } from "lucide-react";
+import { Loader2, Trash2, MessageSquare, Phone, Calendar, ChevronDown, ChevronUp, Edit, User, Clock, AlertCircle } from "lucide-react";
 
 interface DataTableClientesProps {
   data: ClienteWhatsapp[];
@@ -15,6 +15,7 @@ interface DataTableClientesProps {
 
 export const DataTableClientes = ({ data, loading, onUpdate }: DataTableClientesProps) => {
   const [deletingRows, setDeletingRows] = useState<Set<string>>(new Set());
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const { deleteCliente } = useClientesWhatsapp();
   const { toast } = useToast();
 
@@ -46,6 +47,18 @@ export const DataTableClientes = ({ data, loading, onUpdate }: DataTableClientes
     }
   };
 
+  const toggleExpanded = (clienteId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(clienteId)) {
+        newSet.delete(clienteId);
+      } else {
+        newSet.add(clienteId);
+      }
+      return newSet;
+    });
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -70,7 +83,19 @@ export const DataTableClientes = ({ data, loading, onUpdate }: DataTableClientes
   };
 
   const formatPhone = (phone: string) => {
-    // Formatar telefone brasileiro
+    // Se for um ID do WhatsApp (contém @s.whatsapp.net)
+    if (phone.includes('@s.whatsapp.net')) {
+      const number = phone.replace('@s.whatsapp.net', '');
+      const cleaned = number.replace(/\D/g, '');
+      if (cleaned.length === 13) {
+        return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+      } else if (cleaned.length === 11) {
+        return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+      }
+      return number;
+    }
+    
+    // Formatar telefone brasileiro normal
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length === 13) {
       return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
@@ -100,61 +125,73 @@ export const DataTableClientes = ({ data, loading, onUpdate }: DataTableClientes
   }
 
   return (
-    <div className="border rounded-lg overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Nome</TableHead>
-            <TableHead className="w-[150px]">Telefone</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[200px]">Último Contato</TableHead>
-            <TableHead className="w-[300px]">Resumo da Conversa</TableHead>
-            <TableHead className="w-[100px]">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((cliente) => {
-            const isDeleting = deletingRows.has(cliente.id);
+    <div className="space-y-4">
+      {data.length > 1 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+          <span>{data.length} cliente{data.length !== 1 ? 's' : ''} encontrado{data.length !== 1 ? 's' : ''}</span>
+          
+          <div className="flex items-center gap-2">
+            {expandedCards.size > 0 && (
+              <span>{expandedCards.size} expandido{expandedCards.size !== 1 ? 's' : ''}</span>
+            )}
+            
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedCards(new Set(data.map(c => c.id)))}
+                className="h-7 px-2 text-xs"
+              >
+                Expandir Todos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpandedCards(new Set())}
+                className="h-7 px-2 text-xs"
+              >
+                Colapsar Todos
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {data.map((cliente) => {
+        const isDeleting = deletingRows.has(cliente.id);
+        const isExpanded = expandedCards.has(cliente.id);
 
-            return (
-              <TableRow key={cliente.id}>
-                <TableCell className="font-medium">
-                  {cliente.nome || (
-                    <span className="text-muted-foreground italic">Sem nome</span>
-                  )}
-                </TableCell>
-                
-                <TableCell>
+        return (
+          <Card key={cliente.id} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-mono text-sm">{formatPhone(cliente.telefone)}</span>
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle className="text-lg">
+                      {cliente.nome || (
+                        <span className="text-muted-foreground italic">Sem nome</span>
+                      )}
+                    </CardTitle>
                   </div>
-                </TableCell>
-                
-                <TableCell>
                   {getStatusBadge(cliente.status)}
-                </TableCell>
+                </div>
                 
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{formatDate(cliente.data_ultimo_contato)}</span>
-                  </div>
-                </TableCell>
-                
-                <TableCell>
-                  {cliente.resumo_conversa ? (
-                    <div className="max-w-[300px]">
-                      <p className="text-sm line-clamp-2">
-                        {cliente.resumo_conversa}
-                      </p>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground italic text-sm">Sem resumo</span>
-                  )}
-                </TableCell>
-                
-                <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleExpanded(cliente.id)}
+                    className="flex items-center gap-1"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                    {isExpanded ? "Menos" : "Mais"}
+                  </Button>
+                  
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -191,12 +228,94 @@ export const DataTableClientes = ({ data, loading, onUpdate }: DataTableClientes
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-mono text-sm">{formatPhone(cliente.telefone)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{formatDate(cliente.data_ultimo_contato)}</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {cliente.resumo_conversa && (
+                    <div className="flex items-start gap-2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Resumo da Conversa:</p>
+                        <p className="text-sm line-clamp-2">
+                          {cliente.resumo_conversa}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {isExpanded && (
+                <div className="mt-4 pt-4 border-t space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Criado em:</p>
+                          <p className="text-sm">{formatDate(cliente.created_at)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Atualizado em:</p>
+                          <p className="text-sm">{formatDate(cliente.updated_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {cliente.observacoes && (
+                        <div className="flex items-start gap-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Observações:</p>
+                            <p className="text-sm">{cliente.observacoes}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {cliente.resumo_conversa && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Resumo Completo da Conversa:</p>
+                      <div className="bg-muted/50 p-3 rounded-lg">
+                        <p className="text-sm whitespace-pre-wrap">{cliente.resumo_conversa}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Edit className="h-3 w-3" />
+                      Editar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

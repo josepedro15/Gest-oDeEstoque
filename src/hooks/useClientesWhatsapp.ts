@@ -64,9 +64,15 @@ export const useClientesWhatsapp = (search: string = "", statusFilter: string = 
 
   const createCliente = async (cliente: Omit<ClienteWhatsapp, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Limpar e formatar o telefone se necessário
+      const clienteFormatado = {
+        ...cliente,
+        telefone: cliente.telefone.trim()
+      };
+
       const { error } = await supabase
         .from('clientes_whatsapp')
-        .insert([cliente]);
+        .insert([clienteFormatado]);
 
       if (error) {
         throw error;
