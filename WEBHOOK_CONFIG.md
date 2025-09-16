@@ -12,11 +12,11 @@ O sistema agora envia automaticamente dados para um webhook sempre que um produt
 ### Variável de Ambiente
 Adicione no seu arquivo `.env`:
 ```env
-VITE_WEBHOOK_URL=https://n8n.aiensed.com/webhook-test/deposito
+VITE_WEBHOOK_URL=https://webhook.aiensed.com/webhook/deposito
 ```
 
 ### URL Padrão
-Se não configurado, usa: `https://n8n.aiensed.com/webhook-test/deposito`
+Se não configurado, usa: `https://webhook.aiensed.com/webhook/deposito`
 
 ## 📊 **Formato dos Dados Enviados**
 
@@ -132,8 +132,14 @@ INSERT INTO public.clientes_whatsapp (
 
 ## ✅ **Status do Teste**
 
-**Webhook testado e funcionando!** ✅
-- **Endpoint**: `https://n8n.aiensed.com/webhook-test/deposito`
+**Webhook configurado!** ⚠️
+- **Endpoint**: `https://webhook.aiensed.com/webhook/deposito`
 - **Método**: POST
-- **Status**: Dados recebidos com sucesso no n8n
-- **Último teste**: 16/09/2025 23:22
+- **Status**: Aguardando ativação do workflow no n8n
+- **Último teste**: 16/09/2025 23:29
+
+### ⚠️ **Importante**
+Para o webhook funcionar, você precisa:
+1. **Ativar o workflow** no n8n (toggle no canto superior direito)
+2. **Configurar o webhook** para aceitar POST requests
+3. **Testar** editando um produto no estoque

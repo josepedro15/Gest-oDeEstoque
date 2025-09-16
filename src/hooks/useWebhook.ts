@@ -26,7 +26,7 @@ export const useWebhook = () => {
   const [error, setError] = useState<string | null>(null);
 
   // URL do webhook - você pode configurar via variável de ambiente
-  const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || "https://n8n.aiensed.com/webhook-test/deposito";
+  const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || "https://webhook.aiensed.com/webhook/deposito";
 
   const sendWebhook = async (payload: WebhookPayload) => {
     try {
