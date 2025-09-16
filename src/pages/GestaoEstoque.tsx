@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Download, Filter } from "lucide-react";
+import { Plus, Download, Filter, TrendingUp, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { DataTableEstoque } from "@/components/estoque/DataTableEstoque";
 import { ModalNovoItem } from "@/components/estoque/ModalNovoItem";
 import { useEstoque } from "@/hooks/useEstoque";
@@ -72,7 +73,23 @@ export default function GestaoEstoque() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">Gestão de Estoque</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-foreground">Gestão de Estoque</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Início
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/produtos-populares" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Produtos Populares
+              </Link>
+            </Button>
+          </div>
+        </div>
         
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-2">

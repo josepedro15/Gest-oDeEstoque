@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Package } from "lucide-react";
+import { Package, TrendingUp } from "lucide-react";
 
 const Index = () => {
   return (
@@ -15,10 +15,18 @@ const Index = () => {
         <p className="text-lg text-gray-600 max-w-md mx-auto">
           Gerencie seu estoque de materiais de construção de forma simples e eficiente.
         </p>
-        <div className="pt-4">
-          <Button asChild size="lg">
+        <div className="pt-4 space-y-3">
+          <Button asChild size="lg" className="w-full sm:w-auto">
             <Link to="/gestao-estoque">
+              <Package className="h-4 w-4 mr-2" />
               Acessar Gestão de Estoque
+            </Link>
+          </Button>
+          <div className="block sm:hidden" />
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+            <Link to="/produtos-populares">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Produtos Mais Procurados
             </Link>
           </Button>
         </div>
