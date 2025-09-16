@@ -33,6 +33,9 @@ export const useWebhook = () => {
       setLoading(true);
       setError(null);
 
+      console.log('📡 Enviando webhook para:', webhookUrl);
+      console.log('📊 Payload:', JSON.stringify(payload, null, 2));
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -41,17 +44,21 @@ export const useWebhook = () => {
         body: JSON.stringify(payload),
       });
 
+      console.log('📡 Resposta do webhook:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Erro na resposta do webhook:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log('Webhook enviado com sucesso:', result);
+      const result = await response.text();
+      console.log('✅ Webhook enviado com sucesso:', result);
       
       return { success: true, data: result };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('Erro ao enviar webhook:', errorMessage);
+      console.error('💥 Erro ao enviar webhook:', errorMessage);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

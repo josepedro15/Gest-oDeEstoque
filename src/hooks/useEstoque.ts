@@ -75,13 +75,39 @@ export const useEstoque = (search: string = "") => {
         throw new Error('Item não encontrado');
       }
 
-      const { error } = await supabase
+      // Detectar mudanças ANTES de atualizar
+      const changes = [];
+      if (updates.quantidade !== undefined && updates.quantidade !== currentItem.quantidade) {
+        changes.push({
+          field: 'quantidade',
+          old_value: currentItem.quantidade,
+          new_value: updates.quantidade
+        });
+      }
+      if (updates.disponivel !== undefined && updates.disponivel !== currentItem.disponivel) {
+        changes.push({
+          field: 'disponivel',
+          old_value: currentItem.disponivel,
+          new_value: updates.disponivel
+        });
+      }
+      if (updates.preco !== undefined && updates.preco !== currentItem.preco) {
+        changes.push({
+          field: 'preco',
+          old_value: currentItem.preco,
+          new_value: updates.preco
+        });
+      }
+
+      const { data: updatedItem, error } = await supabase
         .from('estoque')
         .update({
           ...updates,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) {
         throw error;
@@ -89,37 +115,13 @@ export const useEstoque = (search: string = "") => {
 
       await fetchData(); // Refresh data after update
 
-      // Buscar o item atualizado para enviar no webhook
-      const updatedItem = data.find(item => item.id === id);
-      if (updatedItem) {
-        // Detectar mudanças
-        const changes = [];
-        if (updates.quantidade !== undefined && updates.quantidade !== currentItem.quantidade) {
-          changes.push({
-            field: 'quantidade',
-            old_value: currentItem.quantidade,
-            new_value: updates.quantidade
-          });
-        }
-        if (updates.disponivel !== undefined && updates.disponivel !== currentItem.disponivel) {
-          changes.push({
-            field: 'disponivel',
-            old_value: currentItem.disponivel,
-            new_value: updates.disponivel
-          });
-        }
-        if (updates.preco !== undefined && updates.preco !== currentItem.preco) {
-          changes.push({
-            field: 'preco',
-            old_value: currentItem.preco,
-            new_value: updates.preco
-          });
-        }
-
-        // Enviar webhook apenas se houver mudanças
-        if (changes.length > 0) {
-          await sendProductUpdated(updatedItem, changes);
-        }
+      // Enviar webhook apenas se houver mudanças
+      if (changes.length > 0 && updatedItem) {
+        console.log('🚀 Enviando webhook para produto atualizado:', updatedItem.nome);
+        console.log('📊 Mudanças detectadas:', changes);
+        await sendProductUpdated(updatedItem, changes);
+      } else {
+        console.log('ℹ️ Nenhuma mudança detectada, webhook não enviado');
       }
 
       return { success: true };
@@ -148,6 +150,7 @@ export const useEstoque = (search: string = "") => {
 
       // Enviar webhook para item criado
       if (newItem) {
+        console.log('🚀 Enviando webhook para produto criado:', newItem.nome);
         await sendProductCreated(newItem);
       }
 
@@ -179,6 +182,7 @@ export const useEstoque = (search: string = "") => {
 
       // Enviar webhook para item deletado
       if (itemToDelete) {
+        console.log('🚀 Enviando webhook para produto deletado:', itemToDelete.nome);
         await sendProductDeleted(itemToDelete);
       }
 
